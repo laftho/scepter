@@ -1,0 +1,31 @@
+{
+  "name": "scepter",
+  "version": "1.0.0",
+  "description": "Arbitrarily intercept upstream proxy requests and responses",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "bash postinstall.sh",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laftho/scepter.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/laftho/scepter/issues"
+  },
+  "homepage": "https://github.com/laftho/scepter#readme",
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "bootstrap": "^3.3.7",
+    "bunyan": "^1.8.10",
+    "ejs": "^2.5.6",
+    "express": "^4.15.2",
+    "jquery": "^3.2.1",
+    "socket.io": "^1.7.3",
+    "superagent": "^3.5.2"
+  }
+}

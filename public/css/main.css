@@ -1,0 +1,15 @@
+body {
+    padding-top: 50px;
+}
+.starter-template {
+    padding: 40px 15px;
+    text-align: center;
+}
+
+[data-status="running"] {
+    background-color: red;
+}
+
+[data-status="stopped"] {
+    background-color: green;
+}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include("../partials/header", { title: "Scepter" }); %>
+  </head>
+  <body>
+
+    <%- include("../partials/nav", { selected: "index" }); %>
+
+    <div class="container">
+
+      <div class="starter-template">
+        <h1>Scepter</h1>
+        <p class="lead">Intercept proxy</p>
+      </div>
+
+    </div>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-1">
+        <div>Proxy <span data-model="port"></span></div>
+        <div>Port: <input type="text" data-model="port"></div>
+        <div>Base: <input type="text" data-model="base"></div>
+        <button name="start-proxy" class="btn" onclick="models.status.value = (models.status.value === 'stopped') ? 'start' : 'stop';" data-model="status">Start Proxy</button>
+      </div>
+    </div>
+  </div>
+
+  </body>
+</html>

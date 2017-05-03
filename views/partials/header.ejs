@@ -1,0 +1,93 @@
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title><%= title %></title>
+
+<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="bootstrap/css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="css/main.css">
+
+<script src="jquery/jquery.min.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
+
+<script src="supermodel.js"></script>
+
+<script>
+    let supermodel = new Supermodel();
+
+    let statusStorage = {
+        save: (key, value) => {
+            return new Promise((resolve) => {
+                let data = {proxy:value};
+                $.ajax({
+                    method: "POST",
+                    url: "/status",
+                    contentType: "application/json",
+                    data: JSON.stringify(data)
+                })
+                .done((data) => {
+                    resolve(data.proxy);
+                });
+            });
+        },
+        load: () => {
+            return new Promise((resolve) => {
+                $.ajax({
+                    method: "GET",
+                    url: "/status"
+                })
+                .done((data) => {
+                    resolve(data.proxy);
+                });
+            });
+        }
+    }
+
+    let proxyConfigStorage = {
+        save: (key, value) => {
+            return new Promise((resolve) => {
+                let data = { proxy: {
+                    port: models.proxy.port.value,
+                    base: models.proxy.base.value
+                }};
+                data.proxy[key] = value;
+
+                $.ajax({
+                    method: "POST",
+                    url: "/config",
+                    contentType: "application/json",
+                    data: JSON.stringify(data)
+                })
+                .done((data) => {
+                    resolve(data.proxy[key]);
+                });
+            });
+        },
+        load: (key) => {
+            return new Promise((resolve) => {
+                $.ajax({
+                    method: "GET",
+                    url: "/config"
+                })
+                .done((data) => {
+                    resolve(data.proxy[key]);
+                });
+            });
+        }
+    };
+
+    let models = {
+        proxy: {
+            port: new Model({ key: "port", autosave: true, storage: proxyConfigStorage }),
+            base: new Model({ key: "base", autosave: true, storage: proxyConfigStorage })
+        },
+        status: new Model({ key: "status", autosave: true, storage: statusStorage })
+    };
+
+    window.addEventListener("load", () => {
+        supermodel.register(models.proxy.port);
+        supermodel.register(models.proxy.base);
+        supermodel.register(models.status);
+    });
+</script>
