@@ -8,11 +8,18 @@ const compression = require("compression");
 const url = require("url");
 const Chronometer = require("express-chrono")().Chronometer;
 const bodyParser = require("body-parser");
+const Event = require("./event.js");
 
 class Proxy {
     constructor(app, options) {
         this.app = app;
         this.rules = [];
+
+        this.on = {
+            beforeRule: new Event(),
+            afterRule: new Event()
+        };
+
         const self = this;
 
         this.app.use(compression());
@@ -99,15 +106,38 @@ class Proxy {
 
             reqUrl = url.parse(`${protocol}//${host}${path}`);
 
+            let output = null;
+            let write = res.write;
+
+            res.write = (chunk, encoding) => {
+                output = chunk;
+                return write.call(res, chunk, encoding);
+            };
+
             for (let rule of self.rules) {
                 if (!rule.before) continue;
                 let re = new RegExp(rule.pattern);
                 if (re.test(reqUrl.href)) {
                     let delegate = (req, res) => {
-                        return eval(`(function() { ${rule.code} });`)();
+                        let returnCode = eval(`(function() { ${rule.code} });`)();
+
+                        self.on.beforeRule.fire(self, rule, returnCode, req, res);
+
+                        return returnCode;
                     };
 
                     if (delegate(req, res) > 0) {
+                        let dat = self.requests.get(req.scepterId);
+                        dat.res.status = res.statusCode;
+                        dat.res.headers = res._header;
+                        if (output && output.constructor.name === "Buffer") {
+                            output = Buffer.from(output);
+                            dat.res.text = output.toString();
+                        }
+
+                        dat.res.hrtime = req.chrono.valueOf();
+
+                        self.requests.set(req.scepterId, dat);
                         return;
                     }
                 }
@@ -148,10 +178,21 @@ class Proxy {
                     let re = new RegExp(rule.pattern);
                     if (re.test(reqUrl.href)) {
                         let delegate = (req, res) => {
-                            return eval(`(function() { ${rule.code} });`)();
+                            let returnCode = eval(`(function() { ${rule.code} });`)();
+
+                            self.on.afterRule.fire(self, rule, returnCode, req, res);
+
+                            return returnCode;
                         };
 
                         if (delegate(req, res) > 0) {
+                            let dat = self.requests.get(req.scepterId);
+                            dat.res.status = resp.status;
+                            dat.res.headers = resp.header;
+                            dat.res.text = resp.text;
+                            dat.res.hrtime = req.chrono.valueOf();
+
+                            self.requests.set(req.scepterId, dat);
                             return;
                         }
                     }
@@ -170,8 +211,10 @@ class Proxy {
 
                         self.requests.set(req.scepterId, dat);
 
-                        res.status(504);
-                        res.send(err);
+                        if (!res._headerSent) {
+                            res.status(504);
+                            res.send(err);
+                        }
                         next();
                         return;
                     }

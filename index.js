@@ -91,8 +91,21 @@ io.on("connection", (socket) => {
         socket.emit("request-updated", request);
     };
 
+    let ruleFired = (sender, rule, returnCode, req, res) => {
+        socket.emit("rule-fired", {
+            rule: rule,
+            returnCode: returnCode,
+            req: {
+                scepterId: req.scepterId,
+                url: req.originalUrl
+            }
+        });
+    };
+
     proxy.requests.on.added.add(requestAdded);
     proxy.requests.on.updated.add(requestUpdated);
+    proxy.on.beforeRule.add(ruleFired);
+    proxy.on.afterRule.add(ruleFired);
 
     socket.on("disconnect", () => {
         proxy.requests.on.added.remove(requestAdded);

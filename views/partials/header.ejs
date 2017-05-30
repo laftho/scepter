@@ -131,10 +131,22 @@
                 $(element).empty();
                 if (value) {
                     value.forEach((val) => {
+                        let isSavedLocally = (() => {
+                            let rules = localStorage.rules;
+
+                            if (!rules) return false;
+
+                            rules = JSON.parse(rules);
+
+                            let hash = rulehash(val);
+                            return rules.hasOwnProperty(hash);
+                        })();
+
                         $(element).append(
 `<li class="list-group-item" id="${val.id}">
     <div class="row">
         <div class="col-sm-1">
+            <button class="btn btn-xs ${(isSavedLocally) ? "btn-warning" : "btn-default"}" onclick="saveLocal(this, ${val.id});"><span class="glyphicon glyphicon-star" aria-hidden="true"></span></button>
             <span>${val.id}</span>
             <div class="badge">${(val.before) ? "before" : (val.after) ? "after" : ""}</div>
         </div>
@@ -173,7 +185,18 @@
                 loaded: (val) => models.ruleCount.value = val.length
             }
         }),
-        ruleCount: new Model({ key: "ruleCount", default: 0 })
+        ruleCount: new Model({ key: "ruleCount", default: 0 }),
+        localRuleCount: new Model({key: "localRuleCount", default: 0, storage:{
+            load: () => {
+                return new Promise((resolve) => {
+                    if (typeof(Storage) === "undefined") {
+                        resolve(0);
+                    }
+
+                    resolve((localStorage.rules) ? Object.getOwnPropertyNames(JSON.parse(localStorage.rules)).length : 0);
+                });
+            }
+        }})
     };
 
     window.addEventListener("load", () => {
@@ -183,6 +206,7 @@
         supermodel.register(models.status);
         supermodel.register(models.rules);
         supermodel.register(models.ruleCount);
+        supermodel.register(models.localRuleCount);
     });
 </script>
 
@@ -206,7 +230,24 @@
 
         socket.on("request-updated", (message) => {
             $(`#${message.scepterId} .status`).append(message.res.status);
-            $(`#${message.scepterId} .response-body`).jsonViewer(JSON.parse(message.res.text), {collapsed: true});
+
+            let body = message.res.text;
+
+            if (body) {
+                try {
+                    body = JSON.parse(body);
+                } catch(ex) { console.log(ex); }
+            }
+
+            $(`#${message.scepterId} .response-body`).jsonViewer(body, {collapsed: true});
+        });
+
+        socket.on("rule-fired", (message) => {
+            let el = $(`#${message.req.scepterId} status`);
+
+            if (el) {
+                el.append(`<div class="badge">rule-${message.rule.id}</div>`);
+            }
         });
     });
 </script>
