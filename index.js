@@ -76,7 +76,7 @@ app.get("/rules", (req, res) => {
 });
 
 app.post("/rules", (req, res) => {
-    proxy.rules = Object.assign(proxy.rules, req.body);
+    proxy.rules = req.body || [];
     res.json(proxy.rules);
 });
 
@@ -101,7 +101,7 @@ io.on("connection", (socket) => {
     });
 });
 
-http.listen(8081, () => {
-    console.log("web interface listening on 8081...");
+http.listen(8083, () => {
+    console.log("web interface listening on 8083...");
 });
 

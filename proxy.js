@@ -99,11 +99,12 @@ class Proxy {
 
             reqUrl = url.parse(`${protocol}//${host}${path}`);
 
-            for (let rule of rules) {
+            for (let rule of self.rules) {
+                if (!rule.before) continue;
                 let re = new RegExp(rule.pattern);
                 if (re.test(reqUrl.href)) {
                     let delegate = (req, res) => {
-                        return eval(rule.code);
+                        return eval(`(function() { ${rule.code} });`)();
                     };
 
                     if (delegate(req, res) > 0) {
@@ -141,6 +142,20 @@ class Proxy {
 
             action.timeout({response:120000}).end((err, resp) => {
                 req.chrono.stop();
+
+                for (let rule of self.rules) {
+                    if (!rule.after) continue;
+                    let re = new RegExp(rule.pattern);
+                    if (re.test(reqUrl.href)) {
+                        let delegate = (req, res) => {
+                            return eval(`(function() { ${rule.code} });`)();
+                        };
+
+                        if (delegate(req, res) > 0) {
+                            return;
+                        }
+                    }
+                }
 
                 if (err) {
                     if (err.response) {

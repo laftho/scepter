@@ -19,11 +19,14 @@
 <script src="codemirror/mode/javascript.js"></script>
 
 <script>
-    /*
     $(function() {
-        const codeMirror = CodeMirror.fromTextArea(document.getElementById("rule-code"));
+        const codeMirror = CodeMirror.fromTextArea(document.getElementById("rule-code"), {
+            lineNumbers: true,
+            mode: "javascript"
+        });
+
+        codeMirror.on("change", () => codeMirror.save());
     });
-    */
 </script>
 
 <script src="supermodel.js"></script>
@@ -96,33 +99,18 @@
     let rulesStorage = {
         save: (key, value) => {
             return new Promise((resolve) => {
-                let data = { proxy: {
-                    port: models.proxy.port.value,
-                    sslport: models.proxy.sslport.value,
-                    base: models.proxy.base.value
-                }};
-                data.proxy[key] = value;
-
                 $.ajax({
                     method: "POST",
                     url: "/rules",
                     contentType: "application/json",
-                    data: JSON.stringify(data)
+                    data: JSON.stringify(value)
                 })
-                .done((data) => {
-                    resolve(data.proxy[key]);
-                });
+                .done((data) => resolve(data));
             });
         },
         load: (key) => {
             return new Promise((resolve) => {
-                $.ajax({
-                    method: "GET",
-                    url: "/config"
-                })
-                    .done((data) => {
-                        resolve(data.proxy[key]);
-                    });
+                $.ajax({ method: "GET", url: "/rules" }).done((data) => resolve(data));
             });
         }
     };
@@ -134,7 +122,58 @@
             base: new Model({ key: "base", autosave: true, storage: proxyConfigStorage })
         },
         status: new Model({ key: "status", autosave: true, storage: statusStorage }),
-        rules: new Model({ key: "rules", autosave: true, storage: rulesStorage })
+        rules: new Model({
+            key: "rules",
+            autosave: true,
+            storage: rulesStorage,
+            default: [],
+            render: (element, value) => {
+                $(element).empty();
+                if (value) {
+                    value.forEach((val) => {
+                        $(element).append(
+`<li class="list-group-item" id="${val.id}">
+    <div class="row">
+        <div class="col-sm-1">
+            <span>${val.id}</span>
+            <div class="badge">${(val.before) ? "before" : (val.after) ? "after" : ""}</div>
+        </div>
+        <div class="col-sm-9">
+            <pre>${val.pattern}</pre>
+        </div>
+        <div class="col-sm-2">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#${val.id}-code-collapse" aria-expanded="false" aria-controls="${val.id}-code-collapse">
+              Code
+            </button>
+            <button class="btn btn-danger" onclick="deleteRule(${val.id});">Delete</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="collapse" id="${val.id}-code-collapse">
+                <div class="well">
+                    <textarea id="${val.id}-code">(function() {\n${val.code}\n});</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</li>
+`);
+
+                        CodeMirror.fromTextArea(document.getElementById(val.id + "-code"), {
+                            readOnly: true,
+                            lineNumbers: true,
+                            mode: "javascript"
+                        });
+                    });
+                }
+            },
+            events: {
+                modified: (val) => models.ruleCount.value = val.length,
+                loaded: (val) => models.ruleCount.value = val.length
+            }
+        }),
+        ruleCount: new Model({ key: "ruleCount", default: 0 })
     };
 
     window.addEventListener("load", () => {
@@ -142,6 +181,8 @@
         supermodel.register(models.proxy.sslport);
         supermodel.register(models.proxy.base);
         supermodel.register(models.status);
+        supermodel.register(models.rules);
+        supermodel.register(models.ruleCount);
     });
 </script>
 

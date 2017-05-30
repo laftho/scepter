@@ -51,7 +51,11 @@ class Model {
             if (element.constructor.name === "HTMLInputElement") {
                 element.value = val;
             } else {
-                element.innerHTML = val;
+                if (this.options.render) {
+                    this.options.render(element, val);
+                } else {
+                    element.innerHTML = val;
+                }
             }
             element.dataset[this.key] = val;
         }

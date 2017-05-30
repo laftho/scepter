@@ -26,3 +26,7 @@ body {
     font-family: "Courier New";
     font-size: 8pt;
 }
+
+.CodeMirror pre {
+    padding-left: 34px !important;
+}

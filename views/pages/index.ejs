@@ -7,17 +7,105 @@
 
     <%- include("../partials/nav", { selected: "index" }); %>
 
-    <div class="container-fluid">
-      Rules
-      <ul><li></li></ul>
+    <script>
 
-      Add
-      <div class="input-group input-group-sm">
-        <input type="text" class="form-control" placeholder="Pattern" name="rule-pattern">
-        <textarea class="form-control" placeholder="Code" id="rule-code" name="rule-code"></textarea>
-        <button onclick="">Add</button>
+      function addRule() {
+          let rules = Array.from(models.rules.value);
+
+          let rule = {
+              id: rules.length,
+              pattern: $("#rule-pattern").val(),
+              code: $("#rule-code").val()
+          };
+
+          rule[$("input[type=radio][name=rules-event-order]:checked").val()] = true;
+
+          rules.push(rule);
+
+          models.rules.value = rules;
+
+          //$("#rule-pattern").clear();
+          //$("#rule-code").clear();
+      }
+
+      function deleteRule(id) {
+          let rules = Array.from(models.rules.value);
+
+          rules.splice(rules.findIndex((val) => val.id === id), 1);
+
+          models.rules.value = rules;
+      }
+
+    </script>
+
+    <div class="container-fluid">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <a role="button" data-toggle="collapse" href="#rulesBody" aria-expanded="false" aria-controls="rulesBody">
+            Rules <span class="badge" data-model="ruleCount">0</span>
+            </a>
+          </h3>
+        </div>
+        <div class="panel-body collapse" id="rulesBody">
+          <div class="row">
+            <div class="col-lg-8">
+              <ul class="list-group" data-model="rules"></ul>
+            </div>
+            <div class="col-lg-4">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title">Add Rule</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                      <label class="col-sm-2" for="rule-pattern">Rule Pattern</label>
+                      <div class="col-sm-10">
+                        <input type="text" class="form-control" placeholder="Pattern" id="rule-pattern" name="rule-pattern">
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="col-sm-2" for="rule-code">Rule Code</label>
+                      <div class="col-sm-10">
+                        <textarea class="form-control" placeholder="Code" id="rule-code" name="rule-code"></textarea>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="col-sm-2" for="rules-event-order">
+                        Remote request rule event order
+                      </label>
+
+                      <div class="col-sm-10">
+                        <div class="radio">
+                          <label>
+                            <input type="radio" name="rules-event-order" id="rule-before" value="before" checked>
+                            Before
+                          </label>
+                        </div>
+                        <div class="radio">
+                          <label>
+                            <input type="radio" name="rules-event-order" id="rule-after" value="after">
+                            After
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <div class="col-sm-offset-2 col-sm-10">
+                        <button onclick="addRule();" class="btn btn-primary">Add Rule</button>
+                      </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+
 
       <div class="container-fluid">
         <table class="table table-bordered table-condensed table-striped">
