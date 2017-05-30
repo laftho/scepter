@@ -14,6 +14,18 @@
 <script src="json-viewer/jquery.json-viewer.js"></script>
 <link href="json-viewer/jquery.json-viewer.css" type="text/css" rel="stylesheet" />
 
+<script src="codemirror/codemirror.js"></script>
+<link href="codemirror/codemirror.css" type="text/css" rel="stylesheet" />
+<script src="codemirror/mode/javascript.js"></script>
+
+<script>
+    /*
+    $(function() {
+        const codeMirror = CodeMirror.fromTextArea(document.getElementById("rule-code"));
+    });
+    */
+</script>
+
 <script src="supermodel.js"></script>
 
 <script>
@@ -81,13 +93,48 @@
         }
     };
 
+    let rulesStorage = {
+        save: (key, value) => {
+            return new Promise((resolve) => {
+                let data = { proxy: {
+                    port: models.proxy.port.value,
+                    sslport: models.proxy.sslport.value,
+                    base: models.proxy.base.value
+                }};
+                data.proxy[key] = value;
+
+                $.ajax({
+                    method: "POST",
+                    url: "/rules",
+                    contentType: "application/json",
+                    data: JSON.stringify(data)
+                })
+                .done((data) => {
+                    resolve(data.proxy[key]);
+                });
+            });
+        },
+        load: (key) => {
+            return new Promise((resolve) => {
+                $.ajax({
+                    method: "GET",
+                    url: "/config"
+                })
+                    .done((data) => {
+                        resolve(data.proxy[key]);
+                    });
+            });
+        }
+    };
+
     let models = {
         proxy: {
             port: new Model({ key: "port", autosave: true, storage: proxyConfigStorage }),
             sslport: new Model({ key: "sslport", autosave: true, storage: proxyConfigStorage }),
             base: new Model({ key: "base", autosave: true, storage: proxyConfigStorage })
         },
-        status: new Model({ key: "status", autosave: true, storage: statusStorage })
+        status: new Model({ key: "status", autosave: true, storage: statusStorage }),
+        rules: new Model({ key: "rules", autosave: true, storage: rulesStorage })
     };
 
     window.addEventListener("load", () => {

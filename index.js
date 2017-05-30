@@ -71,6 +71,15 @@ app.post("/config", (req, res) => {
     res.json(config);
 });
 
+app.get("/rules", (req, res) => {
+    res.json(proxy.rules);
+});
+
+app.post("/rules", (req, res) => {
+    proxy.rules = Object.assign(proxy.rules, req.body);
+    res.json(proxy.rules);
+});
+
 io.on("connection", (socket) => {
     console.log("socket connected");
 

@@ -12,6 +12,7 @@ const bodyParser = require("body-parser");
 class Proxy {
     constructor(app, options) {
         this.app = app;
+        this.rules = [];
         const self = this;
 
         this.app.use(compression());
@@ -97,6 +98,19 @@ class Proxy {
             let path = reqUrl.path || "/";
 
             reqUrl = url.parse(`${protocol}//${host}${path}`);
+
+            for (let rule of rules) {
+                let re = new RegExp(rule.pattern);
+                if (re.test(reqUrl.href)) {
+                    let delegate = (req, res) => {
+                        return eval(rule.code);
+                    };
+
+                    if (delegate(req, res) > 0) {
+                        return;
+                    }
+                }
+            }
 
             let action;
 
