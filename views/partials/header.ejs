@@ -11,6 +11,9 @@
 <script src="jquery/jquery.min.js"></script>
 <script src="bootstrap/js/bootstrap.min.js"></script>
 
+<script src="json-viewer/jquery.json-viewer.js"></script>
+<link href="json-viewer/jquery.json-viewer.css" type="text/css" rel="stylesheet" />
+
 <script src="supermodel.js"></script>
 
 <script>
@@ -49,6 +52,7 @@
             return new Promise((resolve) => {
                 let data = { proxy: {
                     port: models.proxy.port.value,
+                    sslport: models.proxy.sslport.value,
                     base: models.proxy.base.value
                 }};
                 data.proxy[key] = value;
@@ -80,6 +84,7 @@
     let models = {
         proxy: {
             port: new Model({ key: "port", autosave: true, storage: proxyConfigStorage }),
+            sslport: new Model({ key: "sslport", autosave: true, storage: proxyConfigStorage }),
             base: new Model({ key: "base", autosave: true, storage: proxyConfigStorage })
         },
         status: new Model({ key: "status", autosave: true, storage: statusStorage })
@@ -87,7 +92,34 @@
 
     window.addEventListener("load", () => {
         supermodel.register(models.proxy.port);
+        supermodel.register(models.proxy.sslport);
         supermodel.register(models.proxy.base);
         supermodel.register(models.status);
     });
 </script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    $(function () {
+        const socket = io();
+        socket.on("request-added", (message) => {
+            $("#requests").append(`
+                <tr id="${message.scepterId}" class="request">
+                    <td class="col-sm-5 method">${message.req.method}</td>
+                    <td class="col-sm-5 url">${message.req.url}</td>
+                    <td class="col-sm-5 request-body">${message.req.body}</td>
+                    <td class="col-sm-5 status"></td>
+                    <td class="col-sm-5 response-body"></td>
+                </tr>
+            `);
+
+            $(`#${message.scepterId} .request-body`).jsonViewer(JSON.parse(message.req.body), {collapsed: true});
+        });
+
+        socket.on("request-updated", (message) => {
+            $(`#${message.scepterId} .status`).append(message.res.status);
+            $(`#${message.scepterId} .response-body`).jsonViewer(JSON.parse(message.res.text), {collapsed: true});
+        });
+    });
+</script>
+

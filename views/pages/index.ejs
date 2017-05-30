@@ -7,25 +7,22 @@
 
     <%- include("../partials/nav", { selected: "index" }); %>
 
-    <div class="container">
+    <div class="container-fluid">
+      Rules
+      <ul><li></li></ul>
 
-      <div class="starter-template">
-        <h1>Scepter</h1>
-        <p class="lead">Intercept proxy</p>
-      </div>
-
+      Add
+      <input type="text" name="rule-name">
+      <input type="text" name="rule-pattern">
+      <input type="text" name="rule-code">
     </div>
 
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-1">
-        <div>Proxy <span data-model="port"></span></div>
-        <div>Port: <input type="text" data-model="port"></div>
-        <div>Base: <input type="text" data-model="base"></div>
-        <button name="start-proxy" class="btn" onclick="models.status.value = (models.status.value === 'stopped') ? 'start' : 'stop';" data-model="status">Start Proxy</button>
+      <div class="container-fluid">
+        <table class="table table-bordered table-condensed table-striped">
+          <thead><tr><th>Method</th><th>URL</th><th>Request Body</th><th>Status</th><th>Response Body</th></tr></thead>
+          <tbody id="requests"></tbody>
+          <tfoot><tr><th>Method</th><th>URL</th><th>Request Body</th><th>Status</th><th>Response Body</th></tr></tfoot>
+        </table>
       </div>
-    </div>
-  </div>
-
   </body>
 </html>

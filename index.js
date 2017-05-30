@@ -9,6 +9,9 @@ let proxyLog = bunyan.createLogger({
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+
 const Proxy = require("./proxy");
 
 const proxy = new Proxy(express(), {
@@ -22,7 +25,7 @@ const proxy = new Proxy(express(), {
     }
 });
 
-proxy.config = {port:8080};
+proxy.config = {port:8080, sslport:8084, base: ""};
 
 app.use(bodyParser.json());
 app.use(express.static("./public"));
@@ -52,6 +55,7 @@ app.post("/status", (req, res) => {
 let config = {
     proxy: {
         port: 8080,
+        sslport: 8084,
         base: ""
     }
 };
@@ -67,7 +71,28 @@ app.post("/config", (req, res) => {
     res.json(config);
 });
 
-app.listen(8081, () => {
+io.on("connection", (socket) => {
+    console.log("socket connected");
+
+    let requestAdded = (sender, key, request) => {
+        socket.emit("request-added", request);
+    };
+
+    let requestUpdated = (sender, key, request) => {
+        socket.emit("request-updated", request);
+    };
+
+    proxy.requests.on.added.add(requestAdded);
+    proxy.requests.on.updated.add(requestUpdated);
+
+    socket.on("disconnect", () => {
+        proxy.requests.on.added.remove(requestAdded);
+        proxy.requests.on.updated.remove(requestUpdated);
+        console.log("disconnected");
+    });
+});
+
+http.listen(8081, () => {
     console.log("web interface listening on 8081...");
 });
 

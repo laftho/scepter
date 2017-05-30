@@ -1,9 +1,5 @@
 body {
-    padding-top: 50px;
-}
-.starter-template {
-    padding: 40px 15px;
-    text-align: center;
+    padding-top: 70px;
 }
 
 [data-status="running"] {
@@ -12,4 +8,21 @@ body {
 
 [data-status="stopped"] {
     background-color: green;
+}
+
+.request .method {
+    font-family: "Courier New";
+    width: 64px;
+    font-size: 8pt;
+}
+
+.request .status {
+    font-family: "Courier New";
+    width: 64px;
+    font-size: 8pt;
+}
+
+.request .url {
+    font-family: "Courier New";
+    font-size: 8pt;
 }
